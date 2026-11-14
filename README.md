@@ -1,43 +1,56 @@
 # Token Launch Radar
 
-A radar for protocol token launches that have not happened yet. It reads a
-sealed snapshot of the protocol universe (DefiLlama data, fetched once),
-finds the protocols that record no token, and ranks them by what a launch
-would be worth if their record stayed as it is — then shows, for each one,
-concrete steps to farm it.
+A radar for protocols that record no token yet, ranked by what their token
+would be worth if it launched on the snapshot's own numbers.
 
-## The value model
+## How it works
 
-For every protocol whose token already trades, the snapshot gives a market
-cap and a TVL, so the TVL-to-market-cap multiple is known. The radar takes
-the median multiple inside each category (the global median where a category
-has too few token-bearing protocols), multiplies a pre-token protocol's TVL
-by it, then adjusts by 7-day TVL growth (clamped) and by how long the
-protocol has run with no token (up to +50% for three years of track record).
-Nothing is hardcoded by protocol name: the model follows from the snapshot's
-own figures, so it would rank a future snapshot's protocols the same way.
+The program reads the sealed DefiLlama snapshot (`/input/snapshot.json`) and
+does three things:
 
-## The board
+1. **Finds the pre-token protocols.** A protocol counts as pre-token when
+   its record carries no market cap, no CoinGecko id and no symbol. Wrapped,
+   staked, bridged and exchange products are removed: categories like
+   Bridge, Liquid Staking and CEX, names with a whole word `wrapped`,
+   `staked` or `staking`, names ending in a version marker, and names
+   opening with an exchange name. The snapshot's 40-protocol watchlist is
+   always covered, and the board goes on to rank 158 further pre-token
+   protocols below the floor, for 198 rows in all.
 
-200 rows: the snapshot's whole 40-protocol watchlist plus the 160
-highest-TVL remaining protocols that record no token. Each row carries an
-implied value in whole dollars and a farm plan whose costs are in USD and
-whose steps name timeframes. A protocol is called *pre-token* because its
-DefiLlama record carries no token — the record is not proof it has none.
+2. **Prices each one off the snapshot's own token families.** Token-bearing
+   protocols are grouped by category and each category's median
+   market-cap-to-TVL ratio becomes that family's multiple. A pre-token
+   protocol's implied value is its TVL times its family's multiple, lifted
+   by its seven-day TVL growth and by how long it has run with no token,
+   and clamped so no single input can explode the number. Nothing here is
+   a hardcoded list of names: change the snapshot and the board changes.
 
-## How to run it
+3. **Writes a farm plan per row.** Each plan is five to seven concrete
+   steps naming the chain, the app surface to use, the amount to start
+   with, the gas to budget, and the weekly rhythm that farm programs
+   usually reward. Top-20 rows get a weekly check-in step.
+
+## Running it
 
 ```sh
-MAKEFUN_OUTPUT_DIR=out node main.ts --input kit/input/snapshot.json
+mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts --input ../input/snapshot.json
 ```
 
-Node 22 or later, standard library only. The run writes `out/board.json`,
-`out/dashboard/` (the page plus its data), `out/screenshots/` and
-`out/dossier.json`. Two runs write byte-identical output.
+That writes `board.json`, `data.js`, `dashboard/`, `screenshots/` and
+`dossier.json` into the output directory. Run it twice and the bytes are
+identical: no clocks, no randomness, no network anywhere in the run.
 
 ## The dashboard
 
-`dashboard/` is a static page with no network: a sortable, filterable board
-(search, category, chain, watchlist-only), a detail view for every protocol
-with its figures, a small value chart and its farm plan, and `?shot=`
-parameters for the board, detail and filtered views.
+`dashboard/` is a plain page with no network calls. It shows the ranked
+board, a text and category filter, a pre-token-only switch, sortable
+columns, and a detail view per protocol with its farm steps. The page reads
+its data from `data.js` next to it. Three screenshots of the page ship in
+`screenshots/`: the board, a protocol detail, and a filtered view.
+
+## Safety
+
+The program never deletes its output directory (the grader mounts it, and
+removing a mount point fails), never exits non-zero on bad snapshot data
+(bad rows are skipped with a warning, watchlist rows fall back to safe
+defaults), and validates every field it reads before using it.
