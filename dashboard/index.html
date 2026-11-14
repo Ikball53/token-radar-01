@@ -3,49 +3,63 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Token Launch Radar — pre-token protocols priced off the snapshot</title>
+<title>Launch Radar — token launch radar</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<header class="top">
-  <div>
-    <h1>Token Launch Radar</h1>
-    <p class="sub">Pre-token protocols, ranked by implied launch value from the snapshot's own token families.</p>
-  </div>
-  <div class="stats" id="stats"></div>
+<header class="masthead">
+  <p class="kicker">Token launch radar &middot; snapshot 14 Nov 2026</p>
+  <h1>Launch Radar</h1>
+  <p class="lede">What would a protocol&rsquo;s token be worth if its record stayed as it is &mdash; and what should a reader do to farm it before it launches one.</p>
 </header>
-<main>
-  <section class="controls">
-    <input id="q" type="search" placeholder="Search name or slug…" aria-label="Search protocols">
-    <select id="cat" aria-label="Filter by category"><option value="">All categories</option></select>
-    <label class="toggle"><input id="pre" type="checkbox" checked> Pre-token only</label>
-    <label class="toggle"><input id="watch" type="checkbox"> Watchlist only</label>
-    <span class="count" id="count"></span>
-  </section>
-  <section class="wrap">
-    <table id="board">
-      <thead>
-        <tr>
-          <th data-sort="rank">#</th>
-          <th data-sort="name">Protocol</th>
-          <th data-sort="category">Category</th>
-          <th data-sort="chains">Chains</th>
-          <th data-sort="tvl_usd">TVL</th>
-          <th data-sort="change_7d">7d</th>
-          <th data-sort="implied_value_usd">Implied value</th>
-          <th>Farm</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <aside id="detail" class="detail hidden" aria-live="polite"></aside>
-  </section>
-  <p class="foot">Values are the radar's own claim from the sealed snapshot: TVL times the
-  category's token multiple, lifted by 7-day growth and time running with no
-  token. A protocol is listed as pre-token because its record carries no
-  token, never as proof it has none. No network is used by this page.</p>
-</main>
-<script src="../data.js"></script>
+
+<section class="stats" id="stats" aria-label="Coverage"></section>
+
+<section class="model" aria-label="Value model">
+  <h2>How the value is worked out</h2>
+  <p class="formula">implied value = TVL &times; 0.20 &times; growth &times; maturity</p>
+  <ul>
+    <li><strong>0.20</strong> is the base multiple: the median market-cap-to-TVL ratio of the snapshot&rsquo;s 144 protocols whose token already trades (median 0.2049, rounded to 0.20).</li>
+    <li><strong>growth</strong> = 1 + the protocol&rsquo;s 7-day TVL change, clamped to &minus;50% &hellip; +100%. No change reported counts as 1.00.</li>
+    <li><strong>maturity</strong> = 0.75 + 0.25 &times; (years tracked, capped at 4) &divide; 4. A protocol that ran longer with no token counts for more.</li>
+  </ul>
+  <p class="rule">Watchlist: protocols that record no token, hold at least $50M of TVL, and are not a centralised exchange, a bridge, a liquid-staking or restaking product, a wrapped or staked product, a versioned deployment, or an exchange-branded product. The snapshot&rsquo;s own watchlist of 40 sits fully inside it.</p>
+  <p class="caveat">An implied value is this board&rsquo;s own claim. It is not a prediction of whether or when a token launches. A protocol is said to record no token, never that it has none.</p>
+</section>
+
+<nav class="tabs" aria-label="Sections">
+  <button id="tab-pre" class="tab active" type="button">Pre-token</button>
+  <button id="tab-live" class="tab" type="button">Live token</button>
+</nav>
+
+<div class="toolbar">
+  <input id="search" type="search" placeholder="Search name or slug&hellip;" aria-label="Search">
+  <select id="category" aria-label="Category filter"></select>
+  <select id="sort" aria-label="Sort by">
+    <option value="implied">Sort: implied value</option>
+    <option value="tvl">Sort: TVL</option>
+    <option value="chg">Sort: 7-day change</option>
+    <option value="age">Sort: age</option>
+    <option value="name">Sort: name A&ndash;Z</option>
+  </select>
+</div>
+
+<p class="count" id="count"></p>
+
+<table class="board">
+  <thead id="thead"></thead>
+  <tbody id="rows"></tbody>
+</table>
+
+<aside id="drawer" class="drawer" aria-label="Protocol detail" hidden></aside>
+
+<footer>
+  <p>Data: DefiLlama protocol snapshot, fetched 14 Nov 2026, sealed for this competition. Every figure on this page is computed live from that snapshot by the code in app.js; nothing is fetched from the network.</p>
+  <p>Farm steps are concrete actions with the capital, gas and holding time each one needs. Costs are estimates in US dollars at snapshot time.</p>
+</footer>
+
+<script src="data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
